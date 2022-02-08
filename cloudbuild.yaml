@@ -1,0 +1,43 @@
+# $PROJECT_ID resolves to the current project's ID
+# ${_SERVICE} must be provided via --substitutions=_SERVICE=my-service-name argument.
+
+# gcloud builds submit --substitutions _SERVICE=service-name
+
+# See the link below for details on setting default values for substitutions
+# https://cloud.google.com/build/docs/configuring-builds/substitute-variable-values
+
+# See this awesome example of how to run unit tests and test coverage using Cloud Build
+# https://threedots.tech/post/running-integration-tests-on-google-cloud-build/ 
+
+steps:
+  
+- id: docker-build-push-service
+  waitFor: ['-']
+  name: gcr.io/cloud-builders/docker
+  entrypoint: bash
+  args:
+  - -c
+  - | 
+    docker build -t gcr.io/$PROJECT_ID/${_SERVICE} . &&
+    docker push gcr.io/$PROJECT_ID/${_SERVICE}
+- id: gcloud-run-deploy-backend-processor
+  waitFor: ['docker-build-push-service']
+  name: gcr.io/google.com/cloudsdktool/cloud-sdk
+  entrypoint: bash
+  args: 
+  - -c
+  - | 
+    gcloud run deploy ${_SERVICE} \
+      --project $PROJECT_ID \
+      --image gcr.io/$PROJECT_ID/${_SERVICE} \
+      --set-env-vars SESSIONS_COLLECTION=${_SESSIONS_COLLECTION} \
+      --timeout 15m \
+      --region us-east4 \
+      --platform managed \
+      --min-instances 0 \
+      --max-instances 5 \
+      --allow-unauthenticated
+
+substitutions:
+  _SERVICE: dfcx-fauxcaptcha
+  _SESSIONS_COLLECTION: sessions
