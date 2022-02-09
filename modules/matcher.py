@@ -24,11 +24,11 @@ class NameMatcher:
 
       self.perf_stats = {}
       
-      self.source = self._source()
-      self.analyzer = self._analyzer()
-      self.vectorizer = TfidfVectorizer(min_df=self.min_df, analyzer=self.analyzer)
-      self.tfidf = self._tfidf()
-      self.kneighbors = self._kneighbors()
+      self.source = self._source() if not kwargs.get('pickled') else None
+      self.analyzer = self._analyzer() if not kwargs.get('pickled') else None
+      self.vectorizer = TfidfVectorizer(min_df=self.min_df, analyzer=self.analyzer) if not kwargs.get('pickled') else None
+      self.tfidf = self._tfidf() if not kwargs.get('pickled') else None
+      self.kneighbors = self._kneighbors() if not kwargs.get('pickled') else None
       
    def timeit(self, func, name, *args, **kwargs):
       start = time.perf_counter()
@@ -81,9 +81,16 @@ class NameMatcher:
       joblib.dump(self, self.out_file)
       print(f'Model dumped to: {self.out_file}')
 
-   @staticmethod
-   def from_file(path: str):
-      return joblib.load(path)
+   @classmethod
+   def from_file(cls, path: str):
+      unpickled = joblib.load(path)
+      matcher = cls(pickled=True)
+      matcher.source = unpickled.source
+      matcher.analyzer = unpickled.analyzer
+      matcher.vectorizer = unpickled.vectorizer
+      matcher.tfidf = unpickled.tfidf
+      matcher.kneighbors = unpickled.kneighbors
+      return matcher
 
 
 import argparse

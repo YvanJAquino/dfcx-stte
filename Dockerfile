@@ -12,4 +12,5 @@ RUN     mkdir ai-models && \
         pipenv install --system --deploy && \
         python -m modules.matcher
 
-CMD     gunicorn --bind 0.0.0.0:$PORT -w 4 -k uvicorn.workers.UvicornWorker main:app 
+CMD     uvicorn main:app --host 0.0.0.0 --port $PORT
+# CMD     gunicorn --bind 0.0.0.0:$PORT -w 4 -k uvicorn.workers.UvicornWorker main:app 
