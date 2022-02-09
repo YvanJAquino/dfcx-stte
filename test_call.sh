@@ -40,7 +40,8 @@ curl \
 }' \
     -H 'Content-Type: application/json' \
     -X POST \
-    http://localhost:8081/name-provided
+    https://dfcx-stte-example-63ietzwyxq-uk.a.run.app/name-provided
+    # http://localhost:8081/name-provided
 
 
 
