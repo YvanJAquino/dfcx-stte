@@ -13,6 +13,7 @@ fastapi = "*"
 gunicorn = "*"
 joblib = "*"
 scikit-learn = "==1.0.1"
+scipy = "*"
 
 [packages.uvicorn]
 extras = [ "standard",]
