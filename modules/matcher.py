@@ -1,6 +1,8 @@
 import os
 import time
 import json
+import io
+import tarfile
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.neighbors import NearestNeighbors
 import joblib
@@ -16,27 +18,31 @@ class NameMatcher:
       out_file = '../ai-models/matcher.mdl'
    )
 
-   def __init__(self, **kwargs):      
+   def __init__(self, **kwargs):
+      self.source_file = kwargs.get('source_file')
+      self.min_df      = kwargs.get('min_df')
+      self.n_neighbors = kwargs.get('n_neighbors')
+      self.out_file    = kwargs.get('out_file')
+      self.perf_stats  = kwargs.get('perf_stats')
+      self.source      = kwargs.get('source')
+      self.analyzer    = kwargs.get('analyzer')
+      self.vectorizer  = kwargs.get('vectorizer')
+      self.tfidf       = kwargs.get('tfidf')
+      self.kneighbors  = kwargs.get('kneighbors')
+      
+   def set_config(self, **kwargs): 
       self.source_file = kwargs.get('source_file') or self.DEFAULT_CONFIG['source_file']
       self.min_df      = kwargs.get('min_df') or self.DEFAULT_CONFIG.get('min_df')
       self.n_neighbors = kwargs.get('n_neighbors') or self.DEFAULT_CONFIG.get('n_neighbors')
       self.out_file    = kwargs.get('out_file') or self.DEFAULT_CONFIG.get('out_file')
+      self.perf_stats  = {}
 
-      self.perf_stats = {}
-      
-      self.source = self._source() if not kwargs.get('pickled') else None
-      self.analyzer = self._analyzer() if not kwargs.get('pickled') else None
-      self.vectorizer = TfidfVectorizer(min_df=self.min_df, analyzer=self.analyzer) if not kwargs.get('pickled') else None
-      self.tfidf = self._tfidf() if not kwargs.get('pickled') else None
-      self.kneighbors = self._kneighbors() if not kwargs.get('pickled') else None
-      
-   def timeit(self, func, name, *args, **kwargs):
-      start = time.perf_counter()
-      res = func(*args, **kwargs)
-      delta = time.perf_counter() - start
-      self.perf_stats[name] = delta
-      return res
-
+   def fit(self):
+      self.source = self._source()
+      self.analyzer = self._analyzer()
+      self.vectorizer = TfidfVectorizer(min_df=self.min_df, analyzer=self.analyzer)
+      self.tfidf = self._tfidf()
+      self.kneighbors = self._kneighbors()
 
    def _source(self):
       with open(self.source_file) as src:
@@ -77,20 +83,33 @@ class NameMatcher:
       records.sort(key=lambda d: d['similarity'], reverse=True)
       return records
 
-   def dump(self):
-      joblib.dump(self, self.out_file)
-      print(f'Model dumped to: {self.out_file}')
+   def dump(self, fp=None):
+      if not fp:
+         fp = self.out_file
+      
+      with tarfile.open(fp, 'w') as arc:
+         for attr, val in self.__dict__.items():
+               buf = io.BytesIO()
+               joblib.dump(val, buf)
+               buf.seek(0)
+               info = tarfile.TarInfo(attr) # set's the name to the attribute
+               info.size = buf.getbuffer().nbytes
+               arc.addfile(info, buf)
 
-   @classmethod
-   def from_file(cls, path: str):
-      unpickled = joblib.load(path)
-      matcher = cls(pickled=True)
-      matcher.source = unpickled.source
-      matcher.analyzer = unpickled.analyzer
-      matcher.vectorizer = unpickled.vectorizer
-      matcher.tfidf = unpickled.tfidf
-      matcher.kneighbors = unpickled.kneighbors
-      return matcher
+   def load(self, fp):
+      from sklearn.feature_extraction.text import TfidfVectorizer
+      from sklearn.neighbors import NearestNeighbors      
+      kwargs = {}
+      with tarfile.open(fp, 'r:') as arc:
+         for f in arc:
+               ext = arc.extractfile(f).read()
+               buf = io.BytesIO(ext)
+               buf.name = f.name
+               buf.seek(0)
+               attr = joblib.load(buf)
+               kwargs[f.name] = attr
+      self.__init__(**kwargs)
+      return self
 
 
 import argparse
@@ -124,5 +143,7 @@ class NameMatcherCLI:
 if __name__ == '__main__':
    args = NameMatcherCLI()
    config = args()
-   matcher = NameMatcher(**config)
+   matcher = NameMatcher()
+   matcher.set_config(**config)
+   matcher.fit()
    matcher.dump()

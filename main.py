@@ -1,11 +1,20 @@
 from fastapi import FastAPI
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.neighbors import NearestNeighbors
+
 from modules.models import WebhookRequest
 from modules.whr_client import WebhookResponse
 from modules.matcher import NameMatcher
 
-matcher = NameMatcher(source_file='data/full_names.json')
-# matcher = NameMatcher.from_file('ai-models/matcher.mdl')
+matcher = NameMatcher()
+# matcher.load('ai-models/matcher.mdl')
+# matcher.set_config(
+#     source_file = 'data/full_names.json',
+#     out_file = 'ai-models/matcher.mdl'
+# )
+# matcher.fit()
+# matcher.dump()
 
 app = FastAPI()
 

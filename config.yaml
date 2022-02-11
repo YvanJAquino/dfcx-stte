@@ -4,4 +4,4 @@ source_file: data/full_names.json
 min_df: 1
 # The number of neighbors to extract from k-Nearest Neighbors (affects the number of results)
 n_neighbors: 5
-out_file: ai-models/matcher.mdl
+out_file: ai-models/matcher
