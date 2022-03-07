@@ -22,7 +22,8 @@ async def name_provided(webhook: WebhookRequest):
     else:
         matches = matcher.match(name)
         best_match = matches[0]
-        response.add_text_response(f'Okay. I heard {best_match}. Did I get it right this time?')
+        bast_match_name = best_match['source']
+        response.add_text_response(f'Okay. I heard {bast_match_name}. Did I get it right this time?')
 
     return response
 
