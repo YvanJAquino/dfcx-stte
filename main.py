@@ -9,20 +9,20 @@ matcher = NameMatcher(source_file='data/full_names.json')
 
 app = FastAPI()
 
-@app.post('/name-provided')
+@app.post('/retry-full-name')
 async def name_provided(webhook: WebhookRequest):
     parameters = webhook.sessionInfo.parameters
     response = WebhookResponse()
 
-    name = parameters.get('caller-name').get('name')
+    name = parameters.get('retry_full_name')
     print("name:", name)
     if not name:
-        response.add_text_response('caller-name was not found within the session parameters.')
+        response.add_text_response('retry_full_name was not found within the session parameters.')
 
     else:
         matches = matcher.match(name)
         best_match = matches[0]
-        response.add_text_response(f'caller-name: {name}.  Matching Algorithm: {best_match}')
+        response.add_text_response(f'Okay. I heard {best_match}. Did I get it right this time?')
 
     return response
 
