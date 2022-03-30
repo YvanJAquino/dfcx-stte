@@ -5,3 +5,6 @@ modules/__pycache__/
 cloudbuild.yaml
 testing/
 build_docker.sh
+test_call.sh
+test_main.py
+dfcx-archive-1.tar
