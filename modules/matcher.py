@@ -36,7 +36,7 @@ class NameMatcher:
       self.n_neighbors = kwargs.get('n_neighbors') or self.DEFAULT_CONFIG.get('n_neighbors')
       self.out_file    = kwargs.get('out_file') or self.DEFAULT_CONFIG.get('out_file')
 
-      self.perf_stats = {}
+      self.perf_stats = {} # Unused, reserved for future use.  
       
       self.source = self._source() if not kwargs.get('pickled') else None
       self.analyzer = self._analyzer() if not kwargs.get('pickled') else None
@@ -45,6 +45,8 @@ class NameMatcher:
       self.kneighbors = self._kneighbors() if not kwargs.get('pickled') else None
       
    def timeit(self, func, name, *args, **kwargs):
+      # Unused, reserved for future use.
+      
       start = time.perf_counter()
       res = func(*args, **kwargs)
       delta = time.perf_counter() - start
